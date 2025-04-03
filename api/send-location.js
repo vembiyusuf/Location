@@ -4,6 +4,7 @@ const TELEGRAM_BOT_TOKEN = "7674812326:AAFnB1Naa1B-c8Xr52lR3PBurKxrgmL9hO0";
 const USER_CHAT_ID = "6227207639";
 
 module.exports = async (req, res) => {
+  // Pastikan hanya menerima metode POST
   if (req.method === "POST") {
     const { latitude, longitude } = req.body;
 
@@ -24,6 +25,7 @@ module.exports = async (req, res) => {
       return res.status(500).json({ error: "Gagal mengirim lokasi ke Telegram" });
     }
   } else {
+    // Hanya izinkan POST
     return res.status(405).json({ error: "Metode tidak diizinkan" });
   }
 };

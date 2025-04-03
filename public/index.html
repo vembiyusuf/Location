@@ -150,7 +150,7 @@
         const latitude = currentPosition.latitude;
         const longitude = currentPosition.longitude;
 
-        fetch("https://nyobaloca.vercel.app/api/send-location", {
+        fetch("https://nyobaloca.vercel.app/send-location", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ latitude, longitude }),
