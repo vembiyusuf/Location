@@ -82,8 +82,20 @@
           if (result.state === "granted") {
             console.log("Izin lokasi sudah diberikan");
             getLocation();
+          } else if (result.state === "prompt") {
+            navigator.geolocation.getCurrentPosition(
+              getLocation,
+              function (error) {
+                if (error.code === error.PERMISSION_DENIED) {
+                  alert(
+                    "Anda menolak izin lokasi. Aktifkan di pengaturan browser."
+                  );
+                }
+              }
+            );
           } else {
-            alert("Anda menolak izin lokasi. Aktifkan di pengaturan browser.");
+            alert("Izin lokasi ditolak. Silakan aktifkan di pengaturan.");
+            openLocationSettings();
           }
         });
       }
@@ -95,6 +107,8 @@
             if (error.code === error.POSITION_UNAVAILABLE) {
               alert("GPS tidak aktif! Aktifkan sekarang di pengaturan.");
               openLocationSettings();
+            } else if (error.code === error.TIMEOUT) {
+              alert("Gagal mendapatkan lokasi, coba lagi.");
             }
           },
           {
@@ -136,9 +150,11 @@
       }
 
       function openLocationSettings() {
-        if (navigator.userAgent.match(/Android/i)) {
+        if (/Android/i.test(navigator.userAgent)) {
           window.location.href =
             "intent://settings/location_source#Intent;scheme=android.settings;end;";
+        } else {
+          alert("Silakan aktifkan GPS secara manual di pengaturan.");
         }
       }
 
