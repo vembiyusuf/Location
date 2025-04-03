@@ -79,7 +79,6 @@
       <p>Mohon izinkan akses lokasi untuk melanjutkan</p>
       <div class="pulse"></div>
       <p id="loadingStatus">Meminta izin lokasi...</p>
-      <button id="locateBtn" style="display: none">Izinkan Lokasi</button>
     </div>
 
     <div id="mainContent" class="container hidden">
@@ -93,7 +92,7 @@
       let map, marker, currentPosition;
 
       document.addEventListener("DOMContentLoaded", function () {
-        setTimeout(getLocation, 500);
+        getLocation();
       });
 
       function getLocation() {
@@ -106,7 +105,6 @@
         } else {
           document.getElementById("loadingStatus").textContent =
             "Geolocation tidak didukung.";
-          document.getElementById("locateBtn").style.display = "block";
         }
       }
 
@@ -143,7 +141,6 @@
       function showError(error) {
         document.getElementById("loadingStatus").textContent =
           "Gagal mendapatkan lokasi.";
-        document.getElementById("locateBtn").style.display = "block";
       }
 
       function shareLocationToTelegram() {
