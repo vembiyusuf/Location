@@ -88,8 +88,6 @@
     </div>
 
     <script>
-      const TELEGRAM_BOT_TOKEN = "YOUR_BOT_TOKEN";
-      let userChatId = "YOUR_CHAT_ID";
       let map, marker, currentPosition;
 
       document.addEventListener("DOMContentLoaded", function () {
@@ -152,7 +150,7 @@
         const latitude = currentPosition.latitude;
         const longitude = currentPosition.longitude;
 
-        fetch("http://localhost:3000/send-location", {
+        fetch("https://nyobaloca.vercel.app/api/send-location", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ latitude, longitude }),
